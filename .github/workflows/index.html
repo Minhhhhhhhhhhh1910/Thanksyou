@@ -3,42 +3,177 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Cảm ơn Vợ Iu❤️</title>
+  <title>Cảm ơn em ❤️</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
+    html, body {
       margin: 0;
       padding: 0;
+      background: black;
+      overflow: hidden;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+      color: white;
       text-align: center;
-      color: #fff;
     }
-    h1 {
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+    .content {
+      position: relative;
+      z-index: 2;
       margin-top: 60px;
-      font-size: 40px;
     }
-    p {
-      font-size: 20px;
-      margin: 20px;
-    }
+    h1 { font-size: 40px; margin: 10px 0; }
+    h2 { font-size: 24px; margin: 5px 0; }
+    p { font-size: 18px; margin: 10px; }
     img {
       width: 250px;
       border-radius: 20px;
-      margin-top: 20px;
       box-shadow: 0 0 10px white;
     }
   </style>
 </head>
 <body>
-  <h1>🎉 Cảm ơn vợ đã tha lũi cho a🎉</h1>
-  <h2>ANH SẼ HONG LÀM EM BÙN NŨA</h2>
-  <p>
-    BÂY GIỜ VỢ OUT WEB ĐƯỢC RÙI🥳 <br>
-  </p>
-  <img src="https://i.imgur.com/bP7ofAW.gif" alt="Thank you gif">
- <audio autoplay loop>
-    <source src="Tiếng Yeah Cho Các Anh Em Làm Youtube - Nhạc Sống Văn Diện.mp3" type="audio/mp3">
-  </audio> 
+  <div class="content">
+    <h1>🎉 Cảm ơn vợ đã tha lũi cho a 🎉</h1>
+    <h2>ANH SẼ HONG LÀM EM BÙN NỮA</h2>
+    <p>BÂY GIỜ OUT WEB ĐƯỢC RÙI 🥳</p>
+    <img src="https://i.imgur.com/bP7ofAW.gif" alt="Gif cảm ơn">
+  </div>
+
+  <audio id="fw1" src="https://www.soundjay.com/explosion/sounds/fireworks-1.mp3" preload="auto"></audio>
+  <audio id="fw2" src="https://www.soundjay.com/explosion/sounds/fireworks-2.mp3" preload="auto"></audio>
+  <audio id="fw3" src="https://www.soundjay.com/explosion/sounds/fireworks-3.mp3" preload="auto"></audio>
+
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    });
+
+    const fireworks = [];
+    const particles = [];
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    class Firework {
+      constructor(x, y, tx, ty) {
+        this.x = x;
+        this.y = y;
+        this.tx = tx;
+        this.ty = ty;
+        this.speed = random(3, 6);
+        this.angle = Math.atan2(ty - y, tx - x);
+        this.distanceToTarget = Math.hypot(tx - x, ty - y);
+        this.distanceTraveled = 0;
+        this.trail = [];
+        this.color = `hsl(${Math.floor(random(0, 360))}, 100%, 70%)`;
+      }
+      update(index) {
+        this.trail.push([this.x, this.y]);
+        if (this.trail.length > 5) this.trail.shift();
+        const vx = Math.cos(this.angle) * this.speed;
+        const vy = Math.sin(this.angle) * this.speed;
+        this.x += vx;
+        this.y += vy;
+        this.distanceTraveled += Math.hypot(vx, vy);
+        if (this.distanceTraveled >= this.distanceToTarget) {
+          createParticles(this.tx, this.ty, this.color);
+          fireworks.splice(index, 1);
+          playBoom();
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.trail[0][0], this.trail[0][1]);
+        for (let i = 1; i < this.trail.length; i++) {
+          ctx.lineTo(this.trail[i][0], this.trail[i][1]);
+        }
+        ctx.strokeStyle = this.color;
+        ctx.stroke();
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = 2;
+        this.angle = random(0, Math.PI * 2);
+        this.speed = random(2, 10);
+        this.friction = 0.95;
+        this.gravity = 0.7;
+        this.alpha = 1;
+        this.decay = random(0.01, 0.03);
+        this.color = color;
+      }
+      update(index) {
+        this.speed *= this.friction;
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed + this.gravity;
+        this.alpha -= this.decay;
+        if (this.alpha <= 0) particles.splice(index, 1);
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function createParticles(x, y, color) {
+      const count = Math.floor(random(30, 80));
+      for (let i = 0; i < count; i++) {
+        particles.push(new Particle(x, y, color));
+      }
+    }
+
+    function playBoom() {
+      const list = ['fw1', 'fw2', 'fw3'];
+      const snd = document.getElementById(list[Math.floor(Math.random() * list.length)]);
+      snd.currentTime = 0;
+      snd.play().catch(() => {});
+    }
+
+    function loop() {
+      requestAnimationFrame(loop);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.fillRect(0, 0, W, H);
+      fireworks.forEach((fw, i) => { fw.update(i); fw.draw(); });
+      particles.forEach((p, i) => { p.update(i); p.draw(); });
+    }
+
+    function launchMultipleFireworks(count = 5) {
+      for (let i = 0; i < count; i++) {
+        const x = W / 2;
+        const y = H;
+        const tx = random(0, W);
+        const ty = random(H * 0.1, H * 0.6);
+        fireworks.push(new Firework(x, y, tx, ty));
+      }
+    }
+
+    window.addEventListener("load", () => {
+      loop();
+      setInterval(() => {
+        launchMultipleFireworks(6);
+      }, 1000);
+    });
+  </script>
 </body>
 </html>
